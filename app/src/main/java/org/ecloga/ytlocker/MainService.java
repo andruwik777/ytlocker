@@ -1,25 +1,24 @@
 package org.ecloga.ytlocker;
 
-import android.app.Activity;
-import android.app.KeyguardManager;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.*;
-import android.view.animation.*;
-import android.widget.*;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainService extends Service {
 
@@ -27,6 +26,7 @@ public class MainService extends Service {
     private TextView tvInfo;
     private WindowManager windowManager;
     private FrameLayout layout;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -105,7 +105,7 @@ public class MainService extends Service {
         black.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if(event.getAction() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                if (event.getAction() == KeyEvent.KEYCODE_VOLUME_DOWN) {
                     Toast.makeText(getApplicationContext(), "asd", Toast.LENGTH_LONG).show();
                 }
 

@@ -13,12 +13,11 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
 
-        <service android:name=".MainService" android:enabled="true" />
+        <service android:name=".MainService"/>
 
-        <activity android:name="org.ecloga.ytlocker.MainActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
