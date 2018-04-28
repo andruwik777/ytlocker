@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,7 @@ public class MainService extends Service {
     public static final int PASSWORD_RESET_DELAY_MILLIS = 1000;
     private WindowManager windowManager;
     private View passwordLayout;
+    Handler mHandler;
 
     @Nullable
     @Override
@@ -36,7 +38,72 @@ public class MainService extends Service {
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         assert layoutInflater != null;
         passwordLayout = layoutInflater.inflate(R.layout.password_layout, null);
+        mHandler = new Handler(Looper.getMainLooper());
 
+        lockScreenTouches();
+
+        mHandler.postDelayed(() -> changeLayout(), 10000);
+
+        // Tried new Handler(Looper.myLopper()) also
+//        mHandler.postDelayed(() -> lockScreenTouches(), 10000);
+//        mHandler.postDelayed(() -> unlockScreenTouches(), 20000);
+//        mHandler.post(() -> {
+//           for(int i = 0; i < 10; ++i) {
+//               try {
+//                   Thread.sleep(1000);
+//                   Log.d("aaa","MainService.onCreate1 " + i);
+//               } catch (InterruptedException e) {
+//                   Log.d("aaa","ERROR: MainService.onCreate1");
+//                   e.printStackTrace();
+//               }
+//           }
+//           lockScreenTouches();
+//            for(int i = 0; i < 10; ++i) {
+//                try {
+//                    Thread.sleep(1000);
+//                    Log.d("aaa","MainService.onCreate2 " + i);
+//                } catch (InterruptedException e) {
+//                    Log.d("aaa","ERROR: MainService.onCreate2");
+//                    e.printStackTrace();
+//                }
+//            }
+//            stopSelf();
+//        });
+    }
+
+    private void changeLayout() {
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
+                PixelFormat.TRANSLUCENT);
+
+        params.gravity = Gravity.TOP | Gravity.START;
+        params.x = 0;
+        params.y = 0;
+
+        windowManager.updateViewLayout(passwordLayout, params);
+        Log.d("aaa", "MainService.changeLayout");
+    }
+
+    private void changePasswordWhenButtonClicked(int buttonId, TextView password, String nextPasswordChar) {
+        passwordLayout.findViewById(buttonId).setOnClickListener(view -> password.setText(getString(R.string.passwordValue, password.getText(), nextPasswordChar)));
+    }
+
+    private boolean isPasswordCorrect(String password) {
+        return "123".equals(password);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unlockScreenTouches();
+    }
+
+    private void lockScreenTouches() {
         TextView passwordTextView = passwordLayout.findViewById(R.id.textView);
         passwordTextView.addTextChangedListener(new TextWatcher() {
             Handler handler = new Handler(Looper.getMainLooper());
@@ -73,8 +140,8 @@ public class MainService extends Service {
         changePasswordWhenButtonClicked(R.id.button9, passwordTextView, "9");
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
@@ -86,19 +153,11 @@ public class MainService extends Service {
         params.y = 0;
 
         windowManager.addView(passwordLayout, params);
+        Log.d("aaa", "MainService.lockScreenTouches");
     }
 
-    private void changePasswordWhenButtonClicked(int buttonId, TextView password, String nextPasswordChar) {
-        passwordLayout.findViewById(buttonId).setOnClickListener(view -> password.setText(getString(R.string.passwordValue, password.getText(), nextPasswordChar)));
-    }
-
-    private boolean isPasswordCorrect(String password) {
-        return "123".equals(password);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    private void unlockScreenTouches() {
         windowManager.removeView(passwordLayout);
+        Log.d("aaa", "MainService.unlockScreenTouches");
     }
 }
