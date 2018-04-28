@@ -1,6 +1,8 @@
 package org.ecloga.ytlocker;
 
+import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Handler;
@@ -47,28 +49,18 @@ public class MainService extends Service {
         // Tried new Handler(Looper.myLopper()) also
 //        mHandler.postDelayed(() -> lockScreenTouches(), 10000);
 //        mHandler.postDelayed(() -> unlockScreenTouches(), 20000);
-//        mHandler.post(() -> {
-//           for(int i = 0; i < 10; ++i) {
-//               try {
-//                   Thread.sleep(1000);
-//                   Log.d("aaa","MainService.onCreate1 " + i);
-//               } catch (InterruptedException e) {
-//                   Log.d("aaa","ERROR: MainService.onCreate1");
-//                   e.printStackTrace();
-//               }
-//           }
-//           lockScreenTouches();
-//            for(int i = 0; i < 10; ++i) {
-//                try {
-//                    Thread.sleep(1000);
-//                    Log.d("aaa","MainService.onCreate2 " + i);
-//                } catch (InterruptedException e) {
-//                    Log.d("aaa","ERROR: MainService.onCreate2");
-//                    e.printStackTrace();
-//                }
-//            }
-//            stopSelf();
-//        });
+        new Thread(() -> {
+           for(int i = 0; i < 20; ++i) {
+               try {
+                   Thread.sleep(1000);
+                   ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+                   Log.d("aaa","1 " + activityManager.isInLockTaskMode());
+               } catch (InterruptedException e) {
+                   Log.d("aaa","ERROR: MainService.onCreate1");
+                   e.printStackTrace();
+               }
+           }
+        }).start();
     }
 
     private void changeLayout() {
