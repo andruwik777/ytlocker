@@ -1,9 +1,4 @@
 <resources>
     <string name="app_name">YTLocker</string>
     <string name="passwordValue">%1$s%2$s</string>
-    <string name="device_admin_warning">adgsadfsdfsa</string>
-    <string name="device_admin_disabled">device_admin_disabled</string>
-    <string name="kiosk_mode_enabled">kiosk_mode_enabled</string>
-    <string name="kiosk_mode_disabled">kiosk_mode_disabled</string>
-    <string name="device_admin_enabled">device_admin_enabled</string>
 </resources>

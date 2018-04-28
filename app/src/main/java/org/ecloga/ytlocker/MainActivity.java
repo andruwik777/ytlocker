@@ -3,9 +3,6 @@ package org.ecloga.ytlocker;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -15,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.NotificationCompat;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -24,27 +20,10 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DevicePolicyManager mDpm;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
-        mDpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        if (!mDpm.isAdminActive(deviceAdmin)) {
-            Log.e("Kiosk Mode Error", "not_device_admin");
-        }
-
-        boolean isAdminActive = mDpm.isAdminActive(deviceAdmin);
-        boolean isDeviceOwnerApp = mDpm.isDeviceOwnerApp(getPackageName());
-
-        if (isDeviceOwnerApp) {
-            mDpm.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
-        } else {
-            Log.e("Kiosk Mode Error", "not_device_owner");
-        }
 
         Typeface font = Typeface.createFromAsset(getAssets(), "fonts/timeburnernormal.ttf");
 
@@ -110,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
                     notificationManager.notify(21098, notification);
 
                     editor.putString("started", "true");
-                    startLockTask();
                 }else {
                     btnToggle.setText("Start");
                     btnToggle.setBackground(getResources().getDrawable(R.drawable.start));
@@ -118,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
                     notificationManager.cancel(21098);
 
                     editor.putString("started", "false");
-                    stopLockTask();
                 }
 
                 btnToggle.startAnimation(zoom);
