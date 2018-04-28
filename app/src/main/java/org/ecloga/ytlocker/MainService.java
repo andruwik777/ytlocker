@@ -1,6 +1,9 @@
 package org.ecloga.ytlocker;
 
 import android.app.Service;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Handler;
@@ -9,6 +12,7 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +25,8 @@ public class MainService extends Service {
     private WindowManager windowManager;
     private View passwordLayout;
 
+    DevicePolicyManager mDpm;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -30,6 +36,16 @@ public class MainService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+
+
+
+//        new Thread(() -> {
+//            Thread.sleep(1000);
+//            startLockTask();
+//            Thread.sleep(1000);
+//            Thread.sleep(1000);
+//        }).start();
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
