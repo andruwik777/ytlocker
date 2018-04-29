@@ -10,9 +10,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 public class DoorBellService extends Service {
-    public static final long WAKELOCK_TIMEOUT = 5 * 1000L;
+    public static final long WAKELOCK_TIMEOUT = 20 * 1000L;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -24,11 +27,15 @@ public class DoorBellService extends Service {
         super.onCreate();
         ringTheBell();
         turnOnDeviceScreen();
-        new Handler(Looper.getMainLooper()).postDelayed(
-                this::stopSelf,
-                WAKELOCK_TIMEOUT + 5000
-        );
-
+        Handler handler = new Handler(Looper.getMainLooper());
+        if(Utils.requestRootPrivileges()) {
+            handler.postDelayed(
+                    this::stopSelf,
+                    WAKELOCK_TIMEOUT
+            );
+        } else {
+            handler.post(() -> Toast.makeText(this, "Please turn off screen manually on device without root!", Toast.LENGTH_LONG).show());
+        }
     }
 
     @Override
@@ -50,11 +57,11 @@ public class DoorBellService extends Service {
         wl.acquire(WAKELOCK_TIMEOUT);
     }
 
-    // @TargetApi(21) //Suppress lint error for PROXIMITY_SCREEN_OFF_WAKE_LOCK
     public void turnOffScreen() {
-        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
-        assert pm != null;
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, "tag");
-        wl.acquire(WAKELOCK_TIMEOUT);
+        try {
+            Runtime.getRuntime().exec(new String[] { "su", "-c", "input keyevent 26"});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

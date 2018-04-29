@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +17,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -100,5 +104,9 @@ public class MainActivity extends AppCompatActivity {
             btnToggle.startAnimation(zoom);
             editor.apply();
         });
+
+        if (!Utils.requestRootPrivileges()) {
+            Toast.makeText(this, "App have no root access! You must turn the screen off MANUALLY after door ring bell", Toast.LENGTH_LONG).show();
+        }
     }
 }
