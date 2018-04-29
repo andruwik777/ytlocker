@@ -7,12 +7,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.app.NotificationCompat;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -54,16 +53,16 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         String started = prefs.getString("started", "");
 
-        if(started.equals("true")) {
+        if (started.equals("true")) {
             btnToggle.setText("Stop");
             btnToggle.setBackground(getResources().getDrawable(R.drawable.stop));
-        }else {
+        } else {
             btnToggle.setText("Start");
             btnToggle.setBackground(getResources().getDrawable(R.drawable.start));
         }
 
-        PendingIntent pi = PendingIntent.getService(MainActivity.this,
-                0, new Intent(MainActivity.this, MainService.class), 0);
+        PendingIntent pi = PendingIntent.getService(this,
+                0, new Intent(this, MainActivity.class), 0);
 
         final Notification notification = new NotificationCompat.Builder(MainActivity.this)
                 .setTicker("YTLocker")
@@ -76,31 +75,30 @@ public class MainActivity extends AppCompatActivity {
 
         final NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        btnToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SharedPreferences.Editor editor = prefs.edit();
-                Animation zoom = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom);
+        btnToggle.setOnClickListener(v -> {
+            SharedPreferences.Editor editor = prefs.edit();
+            Animation zoom = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom);
 
-                if(btnToggle.getText() == "Start") {
-                    btnToggle.setText("Stop");
-                    btnToggle.setBackground(getResources().getDrawable(R.drawable.stop));
+            if (btnToggle.getText() == "Start") {
+                btnToggle.setText("Stop");
+                btnToggle.setBackground(getResources().getDrawable(R.drawable.stop));
 
-                    notificationManager.notify(21098, notification);
+                notificationManager.notify(21098, notification);
+                startService(new Intent(MainActivity.this, MainService.class));
 
-                    editor.putString("started", "true");
-                }else {
-                    btnToggle.setText("Start");
-                    btnToggle.setBackground(getResources().getDrawable(R.drawable.start));
+                editor.putString("started", "true");
+            } else {
+                btnToggle.setText("Start");
+                btnToggle.setBackground(getResources().getDrawable(R.drawable.start));
 
-                    notificationManager.cancel(21098);
+                notificationManager.cancel(21098);
+                stopService(new Intent(MainActivity.this, MainService.class));
 
-                    editor.putString("started", "false");
-                }
-
-                btnToggle.startAnimation(zoom);
-                editor.apply();
+                editor.putString("started", "false");
             }
+
+            btnToggle.startAnimation(zoom);
+            editor.apply();
         });
     }
 }
