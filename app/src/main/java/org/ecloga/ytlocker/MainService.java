@@ -3,10 +3,12 @@ package org.ecloga.ytlocker;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.PixelFormat;
+import android.media.AudioManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -14,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,6 +32,7 @@ public class MainService extends Service {
     private View passwordLayout;
     private Handler mHandler;
     private BroadcastReceiver onOffScreenReceiver;
+    private ComponentName mReceiverComponent;
 
     @Nullable
     @Override
@@ -39,6 +43,7 @@ public class MainService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d("aaa", "MainService.onCreate");
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -54,6 +59,7 @@ public class MainService extends Service {
 
         addForegroundView();
         registerOnOffScreenBroadcastReceiver();
+        registerMediaButtonEventReceiver();
 
         if (isPinnedModeEnabled()) {
             setupLockLayout();
@@ -61,6 +67,19 @@ public class MainService extends Service {
             Toast.makeText(this, PINNED_MODE_WAITING, Toast.LENGTH_SHORT).show();
             showToastOrLockScreenTouchesAfterDelay();
         }
+    }
+
+    private void registerMediaButtonEventReceiver() {
+        AudioManager mAudioManager =  (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mReceiverComponent = new ComponentName(this,DoorbellReceiver.class);
+        assert mAudioManager != null;
+        mAudioManager.registerMediaButtonEventReceiver(mReceiverComponent);
+    }
+
+    private void unregisterMediaButtonEventReceiver() {
+        AudioManager mAudioManager =  (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        assert mAudioManager != null;
+        mAudioManager.unregisterMediaButtonEventReceiver(mReceiverComponent);
     }
 
     private void registerOnOffScreenBroadcastReceiver() {
@@ -205,8 +224,10 @@ public class MainService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d("aaa", "MainService.onDestroy");
         unregisterOnOffScreenBroadcastReceiver();
         removeForegroundView();
+        unregisterMediaButtonEventReceiver();
         mHandler.removeCallbacksAndMessages(null);
     }
 

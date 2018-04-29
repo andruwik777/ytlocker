@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             btnToggle.setBackground(getResources().getDrawable(R.drawable.start));
         }
 
-        PendingIntent pi = PendingIntent.getService(this,
+        PendingIntent pi = PendingIntent.getActivity(this,
                 0, new Intent(this, MainActivity.class), 0);
 
         final Notification notification = new NotificationCompat.Builder(MainActivity.this)
