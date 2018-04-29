@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -17,13 +18,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainService extends Service {
 
     public static final int PASSWORD_RESET_DELAY_MILLIS = 1000;
+    public static final String PINNED_MODE_WAITING = "Pinned mode waiting...";
     private WindowManager windowManager;
     private View passwordLayout;
-    Handler mHandler;
+    private Handler mHandler;
 
     @Nullable
     @Override
@@ -36,66 +39,20 @@ public class MainService extends Service {
         super.onCreate();
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         assert layoutInflater != null;
         passwordLayout = layoutInflater.inflate(R.layout.password_layout, null);
         mHandler = new Handler(Looper.getMainLooper());
+        setupInitialLayout();
 
-        lockScreenTouches();
-
-        mHandler.postDelayed(() -> changeLayout(), 10000);
-
-        // Tried new Handler(Looper.myLopper()) also
-//        mHandler.postDelayed(() -> lockScreenTouches(), 10000);
-//        mHandler.postDelayed(() -> unlockScreenTouches(), 20000);
-        new Thread(() -> {
-           for(int i = 0; i < 20; ++i) {
-               try {
-                   Thread.sleep(1000);
-                   ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
-                   Log.d("aaa","1 " + activityManager.isInLockTaskMode());
-               } catch (InterruptedException e) {
-                   Log.d("aaa","ERROR: MainService.onCreate1");
-                   e.printStackTrace();
-               }
-           }
-        }).start();
+        Toast.makeText(this, PINNED_MODE_WAITING, Toast.LENGTH_SHORT).show();
+        showToastOrLockScreenTouchesAfterDelay();
     }
 
-    private void changeLayout() {
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
-                PixelFormat.TRANSLUCENT);
+    private void setupLockLayout() {
+        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
+        constraintLayout.setVisibility(View.VISIBLE);
 
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 0;
-        params.y = 0;
-
-        windowManager.updateViewLayout(passwordLayout, params);
-        Log.d("aaa", "MainService.changeLayout");
-    }
-
-    private void changePasswordWhenButtonClicked(int buttonId, TextView password, String nextPasswordChar) {
-        passwordLayout.findViewById(buttonId).setOnClickListener(view -> password.setText(getString(R.string.passwordValue, password.getText(), nextPasswordChar)));
-    }
-
-    private boolean isPasswordCorrect(String password) {
-        return "123".equals(password);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unlockScreenTouches();
-    }
-
-    private void lockScreenTouches() {
         TextView passwordTextView = passwordLayout.findViewById(R.id.textView);
         passwordTextView.addTextChangedListener(new TextWatcher() {
             Handler handler = new Handler(Looper.getMainLooper());
@@ -132,6 +89,26 @@ public class MainService extends Service {
         changePasswordWhenButtonClicked(R.id.button9, passwordTextView, "9");
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
+                PixelFormat.TRANSLUCENT);
+
+        params.gravity = Gravity.TOP | Gravity.START;
+        params.x = 0;
+        params.y = 0;
+
+        windowManager.updateViewLayout(passwordLayout, params);
+    }
+
+    private void setupInitialLayout() {
+        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
+        constraintLayout.setVisibility(View.GONE);
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
@@ -145,7 +122,35 @@ public class MainService extends Service {
         params.y = 0;
 
         windowManager.addView(passwordLayout, params);
-        Log.d("aaa", "MainService.lockScreenTouches");
+    }
+
+    private void showToastOrLockScreenTouchesAfterDelay() {
+        mHandler.postDelayed(() -> {
+                    ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                    assert activityManager != null;
+                    if (!activityManager.isInLockTaskMode()) {
+                        mHandler.post(() -> Toast.makeText(this, PINNED_MODE_WAITING, Toast.LENGTH_SHORT).show());
+                        showToastOrLockScreenTouchesAfterDelay();
+                    } else {
+                        // let user some time to tap OK on the standard hint about pinned mode..
+                        mHandler.postDelayed(() -> setupLockLayout(), 3000);
+                    }
+                }
+                , 5000);
+    }
+
+    private void changePasswordWhenButtonClicked(int buttonId, TextView password, String nextPasswordChar) {
+        passwordLayout.findViewById(buttonId).setOnClickListener(view -> password.setText(getString(R.string.passwordValue, password.getText(), nextPasswordChar)));
+    }
+
+    private boolean isPasswordCorrect(String password) {
+        return "123".equals(password);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unlockScreenTouches();
     }
 
     private void unlockScreenTouches() {
