@@ -11,8 +11,6 @@ import android.view.KeyEvent;
 
 public class DoorbellReceiver extends BroadcastReceiver {
 
-    public static final long WAKELOCK_TIMEOUT = 15 * 1000L;
-
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
@@ -21,22 +19,8 @@ public class DoorbellReceiver extends BroadcastReceiver {
             int action = event.getAction();
             if (keycode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || keycode == KeyEvent.KEYCODE_HEADSETHOOK)
                 if (action == KeyEvent.ACTION_UP) {
-                    ringTheBell(context);
-                    turnOnDeviceScreen(context);
+                    context.startService(new Intent(context, DoorBellService.class));
                 }
         }
-    }
-
-    private void ringTheBell(Context context) {
-        Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Ringtone r = RingtoneManager.getRingtone(context, notification);
-        r.play();
-    }
-
-    private void turnOnDeviceScreen(Context context) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        assert pm != null;
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "tag");
-        wl.acquire(WAKELOCK_TIMEOUT);
     }
 }
