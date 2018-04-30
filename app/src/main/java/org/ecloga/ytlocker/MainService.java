@@ -195,6 +195,35 @@ public class MainService extends Service {
         windowManager.addView(passwordLayout, params);
     }
 
+//    private void lockScreenTouches() {
+//        ConstraintLayout constraintLayoutRoot = passwordLayout.findViewById(R.id.constraintLayoutRoot);
+//        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
+//        constraintLayout.setVisibility(View.GONE);
+//
+//        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+//                WindowManager.LayoutParams.WRAP_CONTENT,
+//                WindowManager.LayoutParams.WRAP_CONTENT,
+//                WindowManager.LayoutParams.TYPE_TOAST,
+//                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+//                PixelFormat.TRANSLUCENT);
+//
+//        params.gravity = Gravity.TOP | Gravity.START;
+//        params.x = 0;
+//        params.y = 0;
+//
+//        passwordLayout.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                return false;
+//            }
+//        });
+//
+//        windowManager.addView(passwordLayout, params);
+//        Log.d("aaa", "MainService.lockScreenTouches");
+//
+//        new Handler().postDelayed(this::unlockScreenTouches, 15000);
+//    }
+
     private boolean isPinnedModeEnabled() {
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         assert activityManager != null;
