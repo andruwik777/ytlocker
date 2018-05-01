@@ -31,16 +31,12 @@ public class MainService extends Service {
     public static final int PASSWORD_RESET_DELAY_MILLIS = 1000;
     public static final String PINNED_MODE_WAITING = "Pinned mode waiting...";
     private WindowManager windowManager;
+    private View fullLayout;
+    private View rootLayout;
     private View passwordLayout;
     private Handler mHandler;
     private BroadcastReceiver onOffScreenReceiver;
     private ComponentName mReceiverComponent;
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
 
     @Override
     public void onCreate() {
@@ -50,12 +46,14 @@ public class MainService extends Service {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         assert layoutInflater != null;
-        passwordLayout = layoutInflater.inflate(R.layout.password_layout, null);
+        fullLayout = layoutInflater.inflate(R.layout.password_layout, null);
+        rootLayout = fullLayout.findViewById(R.id.rootLayout);
+        passwordLayout = fullLayout.findViewById(R.id.blockLayout);
         mHandler = new Handler(Looper.getMainLooper());
         onOffScreenReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                setupLockLayout();
+                updateForgroundView(true);
             }
         };
 
@@ -64,7 +62,7 @@ public class MainService extends Service {
         registerMediaButtonEventReceiver();
 
         if (isPinnedModeEnabled()) {
-            setupLockLayout();
+            updateForgroundView(true);
         } else {
             Toast.makeText(this, PINNED_MODE_WAITING, Toast.LENGTH_SHORT).show();
             showToastOrLockScreenTouchesAfterDelay();
@@ -81,15 +79,26 @@ public class MainService extends Service {
         mHandler.removeCallbacksAndMessages(null);
     }
 
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
     private void registerMediaButtonEventReceiver() {
-        AudioManager mAudioManager =  (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        mReceiverComponent = new ComponentName(this,DoorbellReceiver.class);
+        AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mReceiverComponent = new ComponentName(this, DoorbellReceiver.class);
         assert mAudioManager != null;
         mAudioManager.registerMediaButtonEventReceiver(mReceiverComponent);
     }
 
     private void unregisterMediaButtonEventReceiver() {
-        AudioManager mAudioManager =  (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         assert mAudioManager != null;
         mAudioManager.unregisterMediaButtonEventReceiver(mReceiverComponent);
     }
@@ -105,45 +114,13 @@ public class MainService extends Service {
         unregisterReceiver(onOffScreenReceiver);
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY;
-    }
-
     private void addForegroundView() {
-        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
-        constraintLayout.setVisibility(View.GONE);
-
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
-                PixelFormat.TRANSLUCENT);
-
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 0;
-        params.y = 0;
-
-        windowManager.addView(passwordLayout, params);
-    }
-
-    private void removeForegroundView() {
-        windowManager.removeView(passwordLayout);
-    }
-
-    private void setupLockLayout() {
-        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
-        constraintLayout.setVisibility(View.VISIBLE);
-
         setupPasswodTextView();
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.TYPE_TOAST,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                         WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
@@ -153,30 +130,60 @@ public class MainService extends Service {
         params.x = 0;
         params.y = 0;
 
-        windowManager.updateViewLayout(passwordLayout, params);
+        rootLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                v.performClick();
+                Log.d("aaa", "Some action on the screen");
+                return false;
+            }
+        });
+
+        windowManager.addView(fullLayout, params);
     }
 
-    private void setupNotLockedLayout() {
-        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
-        constraintLayout.setVisibility(View.GONE);
+    private void removeForegroundView() {
+        windowManager.removeView(fullLayout);
+    }
+
+    private void updateForgroundView(boolean needBlockTouches) {
+        int visibility;
+        int width;
+        int height;
+        int flags;
+        if (needBlockTouches) {
+            visibility = View.VISIBLE;
+            width = WindowManager.LayoutParams.MATCH_PARENT;
+            height = WindowManager.LayoutParams.MATCH_PARENT;
+            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                    WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
+
+//            mHandler.postDelayed(() -> updateForgroundView(false), 15000);
+        } else {
+            visibility = View.INVISIBLE;
+            width = WindowManager.LayoutParams.WRAP_CONTENT;
+            height = WindowManager.LayoutParams.WRAP_CONTENT;
+            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+        }
+
+        passwordLayout.setVisibility(visibility);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
+                width,
+                height,
+                WindowManager.LayoutParams.TYPE_TOAST,
+                flags,
                 PixelFormat.TRANSLUCENT);
-
         params.gravity = Gravity.TOP | Gravity.START;
         params.x = 0;
         params.y = 0;
 
-        windowManager.updateViewLayout(passwordLayout, params);
+        windowManager.updateViewLayout(fullLayout, params);
     }
 
-    @NonNull
     private void setupPasswodTextView() {
         TextView passwordTextView = passwordLayout.findViewById(R.id.textView);
         passwordTextView.addTextChangedListener(new TextWatcher() {
@@ -186,8 +193,8 @@ public class MainService extends Service {
             public void afterTextChanged(Editable s) {
                 handler.removeCallbacksAndMessages(null);
                 if (isPasswordCorrect(s.toString())) {
-                    handler.post(() -> passwordTextView.setText(""));
-                    setupNotLockedLayout();
+                    passwordTextView.setText("");
+                    updateForgroundView(false);
                 } else {
                     if (!passwordTextView.getText().toString().isEmpty()) {
                         handler.postDelayed(() -> passwordTextView.setText(""), PASSWORD_RESET_DELAY_MILLIS);
@@ -212,37 +219,9 @@ public class MainService extends Service {
         changePasswordWhenButtonClicked(R.id.button6, passwordTextView, "6");
         changePasswordWhenButtonClicked(R.id.button7, passwordTextView, "7");
         changePasswordWhenButtonClicked(R.id.button8, passwordTextView, "8");
-        changePasswordWhenButtonClicked(R.id.button9, passwordTextView, "9");;
+        changePasswordWhenButtonClicked(R.id.button9, passwordTextView, "9");
+        ;
     }
-
-//    private void lockScreenTouches() {
-//        ConstraintLayout constraintLayoutRoot = passwordLayout.findViewById(R.id.constraintLayoutRoot);
-//        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
-//        constraintLayout.setVisibility(View.GONE);
-//
-//        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-//                WindowManager.LayoutParams.WRAP_CONTENT,
-//                WindowManager.LayoutParams.WRAP_CONTENT,
-//                WindowManager.LayoutParams.TYPE_TOAST,
-//                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
-//                PixelFormat.TRANSLUCENT);
-//
-//        params.gravity = Gravity.TOP | Gravity.START;
-//        params.x = 0;
-//        params.y = 0;
-//
-//        passwordLayout.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                return false;
-//            }
-//        });
-//
-//        windowManager.addView(passwordLayout, params);
-//        Log.d("aaa", "MainService.lockScreenTouches");
-//
-//        new Handler().postDelayed(this::unlockScreenTouches, 15000);
-//    }
 
     private boolean isPinnedModeEnabled() {
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -257,7 +236,7 @@ public class MainService extends Service {
                         showToastOrLockScreenTouchesAfterDelay();
                     } else {
                         // let user some time to tap OK on the standard hint about pinned mode..
-                        mHandler.postDelayed(this::setupLockLayout, 3000);
+                        mHandler.postDelayed(() -> updateForgroundView(true), 3000);
                     }
                 }
                 , 5000);
