@@ -57,7 +57,7 @@ public class DoorBellService extends Service {
         wl.acquire(WAKELOCK_TIMEOUT);
     }
 
-    public void turnOffScreen() {
+    private void turnOffScreen() {
         try {
             Runtime.getRuntime().exec(new String[] { "su", "-c", "input keyevent 26"});
         } catch (IOException e) {

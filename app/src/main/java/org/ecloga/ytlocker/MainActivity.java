@@ -107,8 +107,8 @@ public class MainActivity extends AppCompatActivity {
             editor.apply();
         });
 
-        if (!Utils.requestRootPrivileges()) {
-            Toast.makeText(this, "App have no root access! You must turn the screen off MANUALLY after door ring bell", Toast.LENGTH_LONG).show();
-        }
+//        if (!Utils.requestRootPrivileges()) {
+//            Toast.makeText(this, "App have no root access! You must turn the screen off MANUALLY after door ring bell", Toast.LENGTH_LONG).show();
+//        }
     }
 }
