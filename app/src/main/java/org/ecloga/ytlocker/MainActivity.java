@@ -23,6 +23,8 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int NOTIFICATION_ID = 21098;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
                 .setTicker("YTLocker")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("YTLocker")
-                .setContentText("Click this to block touches")
+                .setContentText("Click this to change settings")
                 .setContentIntent(pi)
                 .setOngoing(true)
                 .build();
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 btnToggle.setText("Stop");
                 btnToggle.setBackground(getResources().getDrawable(R.drawable.stop));
 
-                notificationManager.notify(21098, notification);
+                notificationManager.notify(NOTIFICATION_ID, notification);
                 startService(new Intent(MainActivity.this, MainService.class));
 
                 editor.putString("started", "true");
@@ -95,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 btnToggle.setText("Start");
                 btnToggle.setBackground(getResources().getDrawable(R.drawable.start));
 
-                notificationManager.cancel(21098);
+                notificationManager.cancel(NOTIFICATION_ID);
                 stopService(new Intent(MainActivity.this, MainService.class));
 
                 editor.putString("started", "false");
