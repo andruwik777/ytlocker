@@ -12,6 +12,7 @@ import android.media.AudioManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.text.Editable;
@@ -109,45 +110,35 @@ public class MainService extends Service {
         return START_STICKY;
     }
 
+    private void addForegroundView() {
+        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
+        constraintLayout.setVisibility(View.GONE);
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
+                PixelFormat.TRANSLUCENT);
+
+        params.gravity = Gravity.TOP | Gravity.START;
+        params.x = 0;
+        params.y = 0;
+
+        windowManager.addView(passwordLayout, params);
+    }
+
+    private void removeForegroundView() {
+        windowManager.removeView(passwordLayout);
+    }
+
     private void setupLockLayout() {
         ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
         constraintLayout.setVisibility(View.VISIBLE);
 
-        TextView passwordTextView = passwordLayout.findViewById(R.id.textView);
-        passwordTextView.addTextChangedListener(new TextWatcher() {
-            Handler handler = new Handler(Looper.getMainLooper());
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler.removeCallbacksAndMessages(null);
-                if (isPasswordCorrect(s.toString())) {
-                    handler.post(() -> passwordTextView.setText(""));
-                    setupNotLockedLayout();
-                } else {
-                    if (!passwordTextView.getText().toString().isEmpty()) {
-                        handler.postDelayed(() -> passwordTextView.setText(""), PASSWORD_RESET_DELAY_MILLIS);
-                    }
-                }
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-        });
-
-        changePasswordWhenButtonClicked(R.id.button1, passwordTextView, "1");
-        changePasswordWhenButtonClicked(R.id.button2, passwordTextView, "2");
-        changePasswordWhenButtonClicked(R.id.button3, passwordTextView, "3");
-        changePasswordWhenButtonClicked(R.id.button4, passwordTextView, "4");
-        changePasswordWhenButtonClicked(R.id.button5, passwordTextView, "5");
-        changePasswordWhenButtonClicked(R.id.button6, passwordTextView, "6");
-        changePasswordWhenButtonClicked(R.id.button7, passwordTextView, "7");
-        changePasswordWhenButtonClicked(R.id.button8, passwordTextView, "8");
-        changePasswordWhenButtonClicked(R.id.button9, passwordTextView, "9");
+        setupPasswodTextView();
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -185,24 +176,43 @@ public class MainService extends Service {
         windowManager.updateViewLayout(passwordLayout, params);
     }
 
-    private void addForegroundView() {
-        ConstraintLayout constraintLayout = passwordLayout.findViewById(R.id.constraintLayout);
-        constraintLayout.setVisibility(View.GONE);
+    @NonNull
+    private void setupPasswodTextView() {
+        TextView passwordTextView = passwordLayout.findViewById(R.id.textView);
+        passwordTextView.addTextChangedListener(new TextWatcher() {
+            Handler handler = new Handler(Looper.getMainLooper());
 
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
-                PixelFormat.TRANSLUCENT);
+            @Override
+            public void afterTextChanged(Editable s) {
+                handler.removeCallbacksAndMessages(null);
+                if (isPasswordCorrect(s.toString())) {
+                    handler.post(() -> passwordTextView.setText(""));
+                    setupNotLockedLayout();
+                } else {
+                    if (!passwordTextView.getText().toString().isEmpty()) {
+                        handler.postDelayed(() -> passwordTextView.setText(""), PASSWORD_RESET_DELAY_MILLIS);
+                    }
+                }
+            }
 
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 0;
-        params.y = 0;
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
 
-        windowManager.addView(passwordLayout, params);
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+        });
+
+        changePasswordWhenButtonClicked(R.id.button1, passwordTextView, "1");
+        changePasswordWhenButtonClicked(R.id.button2, passwordTextView, "2");
+        changePasswordWhenButtonClicked(R.id.button3, passwordTextView, "3");
+        changePasswordWhenButtonClicked(R.id.button4, passwordTextView, "4");
+        changePasswordWhenButtonClicked(R.id.button5, passwordTextView, "5");
+        changePasswordWhenButtonClicked(R.id.button6, passwordTextView, "6");
+        changePasswordWhenButtonClicked(R.id.button7, passwordTextView, "7");
+        changePasswordWhenButtonClicked(R.id.button8, passwordTextView, "8");
+        changePasswordWhenButtonClicked(R.id.button9, passwordTextView, "9");;
     }
 
 //    private void lockScreenTouches() {
@@ -259,9 +269,5 @@ public class MainService extends Service {
 
     private boolean isPasswordCorrect(String password) {
         return "123".equals(password);
-    }
-
-    private void removeForegroundView() {
-        windowManager.removeView(passwordLayout);
     }
 }
