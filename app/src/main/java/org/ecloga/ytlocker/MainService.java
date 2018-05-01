@@ -28,7 +28,7 @@ public class MainService extends Service {
 
     public static final int DELAY_PASSWORD_RESET_MILLIS = 1000;
     public static final String PINNED_MODE_WAITING = "Pinned mode waiting...";
-    public static final int TYPE_TOAST = WindowManager.LayoutParams.TYPE_TOAST;
+    public static final int TYPE_TOAST = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
     public static final int DELAY_CHECK_PINED_MODE_MILLIS = 5000;
     public static final int DELAY_BEFORE_TOUCHES_BLOCKING_MILLIS = 3000;
 
@@ -36,6 +36,16 @@ public class MainService extends Service {
     private View fullLayout;
     private View rootLayout;
     private View passwordLayout;
+    private View button1;
+    private View button2;
+    private View button3;
+    private View button4;
+    private View button5;
+    private View button6;
+    private View button7;
+    private View button8;
+    private View button9;
+    private View textView;
     private Handler mHandler;
     private BroadcastReceiver onOffScreenReceiver;
     private ComponentName mReceiverComponent;
@@ -52,12 +62,22 @@ public class MainService extends Service {
         fullLayout = layoutInflater.inflate(R.layout.block_layout, null);
         rootLayout = fullLayout.findViewById(R.id.rootLayout);
         passwordLayout = fullLayout.findViewById(R.id.passwordLayout);
+        button1 = passwordLayout.findViewById(R.id.button1);
+        button2 = passwordLayout.findViewById(R.id.button2);
+        button3 = passwordLayout.findViewById(R.id.button3);
+        button4 = passwordLayout.findViewById(R.id.button4);
+        button5 = passwordLayout.findViewById(R.id.button5);
+        button6 = passwordLayout.findViewById(R.id.button6);
+        button7 = passwordLayout.findViewById(R.id.button7);
+        button8 = passwordLayout.findViewById(R.id.button8);
+        button9 = passwordLayout.findViewById(R.id.button9);
+        textView = passwordLayout.findViewById(R.id.textView);
         mReceiverComponent = new ComponentName(this, DoorbellReceiver.class);
         mHandler = new Handler(Looper.getMainLooper());
         onOffScreenReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                temporaryUnlocked = true;
+                temporaryUnlocked = false;
                 processBlocking(true, false);
             }
         };
@@ -152,24 +172,27 @@ public class MainService extends Service {
     }
 
     private WindowManager.LayoutParams prepareLayoutParams(boolean needBlockTouches) {
-        int passwordVisibility;
-        int rootVisibility;
+        int visibility;
+//        int rootVisibility;
         int width;
         int height;
         int flags;
         if (needBlockTouches) {
-            passwordVisibility = View.VISIBLE;
-            rootVisibility = View.VISIBLE;
+            visibility = View.VISIBLE;
+//            rootVisibility = View.VISIBLE;
             width = WindowManager.LayoutParams.MATCH_PARENT;
             height = WindowManager.LayoutParams.MATCH_PARENT;
             flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                     WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
+//
+//            rootLayout.setVisibility(View.INVISIBLE);
 
 //            mHandler.postDelayed(() -> updateForgroundView(false), 15000);
         } else {
-            passwordVisibility = View.GONE;
-            rootVisibility = View.INVISIBLE;
+            visibility = View.GONE;
+//            rootLayout.setVisibility(View.INVISIBLE);
+//            rootVisibility = View.INVISIBLE;
             width = WindowManager.LayoutParams.WRAP_CONTENT;
             height = WindowManager.LayoutParams.WRAP_CONTENT;
             flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
@@ -177,8 +200,19 @@ public class MainService extends Service {
                     WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
         }
 
-        passwordLayout.setVisibility(passwordVisibility);
-        rootLayout.setVisibility(rootVisibility);
+        passwordLayout.setVisibility(visibility);
+        //rootLayout.setVisibility(visibility);
+        button1.setVisibility(visibility);
+        button2.setVisibility(visibility);
+        button3.setVisibility(visibility);
+        button4.setVisibility(visibility);
+        button5.setVisibility(visibility);
+        button6.setVisibility(visibility);
+        button7.setVisibility(visibility);
+        button8.setVisibility(visibility);
+        button9.setVisibility(visibility);
+        textView.setVisibility(visibility);
+//        rootLayout.setVisibility(rootVisibility);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 width,
