@@ -70,6 +70,16 @@ public class MainService extends Service {
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("aaa", "MainService.onDestroy");
+        unregisterMediaButtonEventReceiver();
+        unregisterOnOffScreenBroadcastReceiver();
+        removeForegroundView();
+        mHandler.removeCallbacksAndMessages(null);
+    }
+
     private void registerMediaButtonEventReceiver() {
         AudioManager mAudioManager =  (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mReceiverComponent = new ComponentName(this,DoorbellReceiver.class);
@@ -249,16 +259,6 @@ public class MainService extends Service {
 
     private boolean isPasswordCorrect(String password) {
         return "123".equals(password);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d("aaa", "MainService.onDestroy");
-        unregisterOnOffScreenBroadcastReceiver();
-        removeForegroundView();
-        unregisterMediaButtonEventReceiver();
-        mHandler.removeCallbacksAndMessages(null);
     }
 
     private void removeForegroundView() {
